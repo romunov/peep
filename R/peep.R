@@ -13,10 +13,13 @@ peep <- function(x, n = 6, digits = 4) {
   console.width <- options()$width
   dot <- "\u00b7"
 
+  x <- data.frame(x, check.names = FALSE)
+
+  # Round numeric classes to optimize printing the number of columns.
   cols.numeric <- sapply(x, FUN = class)
   x[, cols.numeric == "numeric"] <- signif(x[, cols.numeric == "numeric", drop = FALSE], digits = digits)
 
-  # make rownames into digits and pad them with leading zeros
+  # Make rownames into digits and pad them with leading zeros.
   rownames(x) <- prepareRownames(x)
 
   if (nrow(x) > (2 * n)) {
@@ -25,18 +28,18 @@ peep <- function(x, n = 6, digits = 4) {
     topcols <- x
   }
 
-  # find max widths (colname, values) for all columns (depends on class)
+  # Find max widths (either colname or values) for all columns (depends on class).
   max.col.valu.widths <- apply(X = topcols,
-                          MARGIN = 2,
-                          FUN = function(m) max(nchar(m)))
+                               MARGIN = 2,
+                               FUN = function(m) max(nchar(m)))
   max.col.name.widths <- nchar(colnames(topcols))
   max.col.widths <- rbind(max.col.valu.widths, max.col.name.widths)
   max.col.widths <- apply(X = max.col.widths, MARGIN = 2, FUN = max)
   max.col.widths <- max.col.widths + 1 # due to space between columns
-  # print(max.col.widths)
 
-  # see how many columns from left and right can be safely printed without breaking a line
-  working.width <- max(nchar(rownames(x))) + 2 # start with width of the rownames + additional space to first column
+  # See how many columns from left and right can be safely printed
+  # without breaking a line
+  working.width <- max(nchar(rownames(x)))  # adds rowname width
   columns <- list(left = c(), right = c())
 
   inward.slider <- data.frame(left = 1:ncol(x), right = rev(1:ncol(x)))
@@ -44,20 +47,27 @@ peep <- function(x, n = 6, digits = 4) {
   for (i in 1:ncol(x)) {
     is <- inward.slider[i, ]
 
-    if (working.width + max.col.widths[is$left]>= console.width) {
-      next
+    if ((working.width + max.col.widths[is$left]) >= console.width) {
+      columns$left <- c(columns$left, NA)
+    } else {
+      working.width <- working.width + max.col.widths[is$left]
+      columns$left <- c(columns$left, is$left)
     }
-
-    working.width <- working.width + max.col.widths[is$left]
-    columns$left <- c(columns$left, is$left)
 
     if (working.width + max.col.widths[is$right] >= console.width) {
-      next
+      columns$right <- c(columns$right, NA)
+    } else {
+      working.width <- working.width + max.col.widths[is$right]
+      columns$right <- c(columns$right, is$right)
     }
 
-    working.width <- working.width + max.col.widths[is$right]
-    columns$right <- c(columns$right, is$right)
+    if (any(is.na(columns$left)) & any(is.na(columns$right))) {
+      break
+    }
   }
+
+  columns$left <- na.omit(columns$left)
+  columns$right <- na.omit(columns$right)
 
   # This is the column that will be converted to dots.
   dots <- which.max(lengths(columns))
@@ -67,7 +77,7 @@ peep <- function(x, n = 6, digits = 4) {
     dots <- min(columns$right)
   }
 
-  columns <- c(columns$left, columns$right)
+  columns <- c(na.omit(columns$left), na.omit(columns$right))
   columns <- unique(sort(columns))
 
   if (length(columns) >= ncol(x)) {
@@ -76,11 +86,25 @@ peep <- function(x, n = 6, digits = 4) {
     return(out)
   }
 
+  # This is a hackish way of constructing the data.frame. If you use
+  # regular subsetting, i.e. x[, columns], it appends `.1` to column
+  # names and messes everything up. The workaround here is to use
+  # cbind(), grow the final object and go to hell. I'll take one for
+  # the team.
+  save.rownames <- rownames(x)
+
+  const.out <- x[, 1, drop = FALSE]
+  for (i in columns[-1]) {
+    const.out <- cbind(const.out, x[, i, drop = FALSE])
+  }
+  x <- do.call(cbind, const.out)
+
+  x <- as.data.frame(x, stringsAsFactors = FALSE)
+  rownames(x) <- save.rownames
+
   # Add vertical divider by converting a column to dots.
   x[, dots] <- dot
   colnames(x)[dots] <- paste(rep(" ", times = min(max.col.widths[dots], 2)), collapse = "")
-
-  x <- x[, columns]
 
   # Add horizontal divider.
   out <- clipAndAddHorizontalDivider(x = x, dot = dot, n = n)
