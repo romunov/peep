@@ -22,10 +22,11 @@ clipAndAddHorizontalDivider <- function(x, dot, n) {
     hor.line[, i] <- dot
   }
 
-  out <- rbind(
+  out <- rbind.data.frame(
     head(x, n = n),
     hor.line,
-    tail(x, n = n)
+    tail(x, n = n),
+    stringsAsFactors = FALSE
   )
 
   out
