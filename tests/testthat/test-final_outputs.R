@@ -3,11 +3,10 @@ context("Check final outputs")
 options(width = 80)
 
 xy <- mtcars
-xy$brand <- rownames(xy)
 xy$mpg <- as.factor(xy$mpg)
 xy$gear <- as.character(xy$gear)
 
-xy <- xy[, c("brand", "mpg", "cyl", "disp", "hp",
+xy <- xy[, c("mpg", "cyl", "disp", "hp",
              "drat", "wt", "qsec", "vs", "am", "gear",
              "carb", "mpg", "cyl", "disp", "hp", "drat", "drat", "drat")]
 
