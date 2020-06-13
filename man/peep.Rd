@@ -4,15 +4,21 @@
 \alias{peep}
 \title{Fit data.frame print into console width}
 \usage{
-peep(x, n = 6, digits = 4)
+peep(x, n = 6, digits = 4, r2c = FALSE)
 }
 \arguments{
-\item{x}{Data.frame to be printed.}
+\item{x}{Data.frame  or matrix to be printed. Object is coerced to
+data.frame.}
 
-\item{n}{Integer. Max number of first and last rows to print.}
+\item{n}{Integer. Max number of first and last rows to print.
+Default is 6.}
 
 \item{digits}{Integer, to what number of digits numeric columns
-are being rounded.}
+are being rounded. Default is 4.}
+
+\item{r2c}{Logical. If \code{TRUE}, rownames are coerced to a
+column which is placed at the beginning of the data.frame.
+Default is FALSE.}
 }
 \value{
 Invisibly returns a data.frame in case you would need it

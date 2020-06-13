@@ -1,15 +1,20 @@
 #' Fit data.frame print into console width
-#' @param x Data.frame to be printed.
+#' @param x Data.frame  or matrix to be printed. Object is coerced to
+#' data.frame.
 #' @param n Integer. Max number of first and last rows to print.
+#' Default is 6.
 #' @param digits Integer, to what number of digits numeric columns
-#' are being rounded.
+#' are being rounded. Default is 4.
+#' @param r2c Logical. If \code{TRUE}, rownames are coerced to a
+#' column which is placed at the beginning of the data.frame.
+#' Default is FALSE.
 #' @return Invisibly returns a data.frame in case you would need it
 #' for some reason. The main side effect is printing of the abridged
 #' version to the console.
 #' @author Roman Lustrik (roman.lustrik@@biolitika.si)
 #' @importFrom utils head tail
 #' @export
-peep <- function(x, n = 6, digits = 4) {
+peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   console.width <- options()$width
   dot <- "\u00b7"
 
@@ -18,6 +23,18 @@ peep <- function(x, n = 6, digits = 4) {
   # Round numeric classes to optimize printing the number of columns.
   cols.numeric <- sapply(x, FUN = class)
   x[, cols.numeric == "numeric"] <- signif(x[, cols.numeric == "numeric", drop = FALSE], digits = digits)
+
+  # Coerce rownames to column and place it at the first position in
+  # the data.frame.
+  if (r2c == TRUE) {
+    # We need to overwrite column names because subsettings messes them up.
+    cn <- colnames(x)
+    x$rn <- rownames(x)
+    nc <- ncol(x)
+
+    x <- x[, c(nc, 1:(nc - 1))]
+    colnames(x) <- c("rn", cn)
+  }
 
   # Make rownames into digits and pad them with leading zeros.
   rownames(x) <- prepareRownames(x)
