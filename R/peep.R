@@ -48,7 +48,7 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   # Find max widths (either colname or values) for all columns (depends on class).
   max.col.valu.widths <- apply(X = topcols,
                                MARGIN = 2,
-                               FUN = function(m) max(nchar(m)))
+                               FUN = function(m) max(nchar(m, keepNA = FALSE)))
   max.col.name.widths <- nchar(colnames(topcols))
   max.col.widths <- rbind(max.col.valu.widths, max.col.name.widths)
   max.col.widths <- apply(X = max.col.widths, MARGIN = 2, FUN = max)
@@ -64,6 +64,9 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   for (i in 1:ncol(x)) {
     is <- inward.slider[i, ]
 
+    # if (i == 3) {
+    #   browser()
+    # }
     if ((working.width + max.col.widths[is$left]) >= console.width) {
       columns$left <- c(columns$left, NA)
     } else {

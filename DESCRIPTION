@@ -1,7 +1,7 @@
 Package: peep
 Type: Package
 Title: Abridged printing of large data.frames
-Version: 1.0.1
+Version: 1.0.2
 Authors@R: person("Roman", "Luštrik", role = c("aut", "cre"), email = "roman.lustrik@biolitika.si")
 Description: Prints too wide or long data.frames within the confines of the console width. Inspired by data.table and DataFrame printing from pandas (Python).
 License: GPL-2
