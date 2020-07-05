@@ -18,11 +18,32 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   console.width <- options()$width
   dot <- "\u00b7"
 
-  x <- data.frame(x, check.names = FALSE)
-
   # Round numeric classes to optimize printing the number of columns.
-  cols.numeric <- sapply(x, FUN = class)
-  x[, cols.numeric == "numeric"] <- signif(x[, cols.numeric == "numeric", drop = FALSE], digits = digits)
+  roundNumeric <- function(topcols, digits) {
+    cols.numeric <- sapply(topcols, FUN = class) == "numeric"
+    # Round only first and last 100 columns. There's little chance
+    # you'll have the space to print more than 100 columns. If not,
+    # we can solve this with a simple pull request.
+    cols <- 1:ncol(topcols)
+    cols.numeric <- cols.numeric & (cols <= max(head(cols, 50))) & (cols >= min(tail(cols, 50)))
+
+    topcols[, cols.numeric] <- signif(topcols[, cols.numeric, drop = FALSE], digits = digits)
+    topcols
+  }
+
+  if (!is.data.frame(x)) {
+    x <- data.frame(x, check.names = FALSE)
+  }
+
+  # Subset to only the first and last 50 columns. There's a chance
+  # your display isn't hable to handle more than 100 columns anyway.
+  # If it is, let's make this an adjustable parameter. Suggest a
+  # pull request.
+  cols <- 1:ncol(x)
+  # fl50 stands for first-last 50.
+  fl50 <- (cols <= max(head(cols, 50))) | (cols >= min(tail(cols, 50)))
+  x <- x[, fl50]
+  x <- roundNumeric(x, digits = digits)
 
   # Coerce rownames to column and place it at the first position in
   # the data.frame.
@@ -45,7 +66,8 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
     topcols <- x
   }
 
-  # Find max widths (either colname or values) for all columns (depends on class).
+  # Find max widths (either colname or values) for all columns (depends
+  # on class).
   max.col.valu.widths <- apply(X = topcols,
                                MARGIN = 2,
                                FUN = function(m) max(nchar(m, keepNA = FALSE)))
@@ -55,7 +77,7 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   max.col.widths <- max.col.widths + 1 # due to space between columns
 
   # See how many columns from left and right can be safely printed
-  # without breaking a line
+  # without breaking a line.
   working.width <- max(nchar(rownames(x)))  # adds rowname width
   columns <- list(left = c(), right = c())
 
@@ -64,9 +86,6 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   for (i in 1:ncol(x)) {
     is <- inward.slider[i, ]
 
-    # if (i == 3) {
-    #   browser()
-    # }
     if ((working.width + max.col.widths[is$left]) >= console.width) {
       columns$left <- c(columns$left, NA)
     } else {
