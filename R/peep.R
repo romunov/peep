@@ -19,16 +19,16 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   dot <- "\u00b7"
 
   # Round numeric classes to optimize printing the number of columns.
-  roundNumeric <- function(topcols, digits) {
-    cols.numeric <- sapply(topcols, FUN = class) == "numeric"
+  roundNumeric <- function(x, digits) {
+    cols.numeric <- sapply(x, FUN = class) == "numeric"
     # Round only first and last 100 columns. There's little chance
     # you'll have the space to print more than 100 columns. If not,
     # we can solve this with a simple pull request.
-    cols <- 1:ncol(topcols)
+    cols <- 1:ncol(x)
     cols.numeric <- cols.numeric & (cols <= max(head(cols, 50))) & (cols >= min(tail(cols, 50)))
 
-    topcols[, cols.numeric] <- signif(topcols[, cols.numeric, drop = FALSE], digits = digits)
-    topcols
+    x[, cols.numeric] <- signif(x[, cols.numeric, drop = FALSE], digits = digits)
+    x
   }
 
   if (!is.data.frame(x)) {
@@ -48,7 +48,8 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   # Coerce rownames to column and place it at the first position in
   # the data.frame.
   if (r2c == TRUE) {
-    # We need to overwrite column names because subsettings messes them up.
+    # We need to overwrite column names because subsettings messes
+    # them up.
     cn <- colnames(x)
     x$rn <- rownames(x)
     nc <- ncol(x)
@@ -57,21 +58,21 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
     colnames(x) <- c("rn", cn)
   }
 
-  # Make rownames into digits and pad them with leading zeros.
-  rownames(x) <- prepareRownames(x)
+  # Number of rows will be used when recreating row names after
+  # subsetting.
+  nr.big <- nrow(x)
 
   if (nrow(x) > (2 * n)) {
-    topcols <- rbind(head(x, n = n), tail(x, n = n))
-  } else {
-    topcols <- x
+    x <- rbind(head(x, n = n + 1), tail(x, n = n))
   }
+
+  # Make rownames into digits and pad them with leading zeros.
+  rownames(x) <- prepareRownames(x, n = n, nr = nr.big)
 
   # Find max widths (either colname or values) for all columns (depends
   # on class).
-  max.col.valu.widths <- apply(X = topcols,
-                               MARGIN = 2,
-                               FUN = function(m) max(nchar(m, keepNA = FALSE)))
-  max.col.name.widths <- nchar(colnames(topcols))
+  max.col.valu.widths <- apply(X = x, MARGIN = 2, FUN = function(m) max(nchar(m, keepNA = FALSE)))
+  max.col.name.widths <- nchar(colnames(x))
   max.col.widths <- rbind(max.col.valu.widths, max.col.name.widths)
   max.col.widths <- apply(X = max.col.widths, MARGIN = 2, FUN = max)
   max.col.widths <- max.col.widths + 1 # due to space between columns
@@ -122,6 +123,7 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   if (length(columns) >= ncol(x)) {
     out <- clipAndAddHorizontalDivider(x = x, dot = dot, n = n)
 
+    print(out)
     return(out)
   }
 

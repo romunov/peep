@@ -33,7 +33,7 @@ test_that("Test high level peep functionality", {
 context("Check internals")
 
 smolx <- data.frame(a = 1:10)
-test.smolx <- peep:::prepareRownames(smolx)
+test.smolx <- peep:::prepareRownames(smolx, n = 6, nr = nrow(smolx))
 
 clw <- data.frame(longname = 1, srt = "long value")
 test.clw <- peep:::maxColumnWidth(clw)
