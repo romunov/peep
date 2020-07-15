@@ -32,7 +32,7 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   }
 
   if (!is.data.frame(x)) {
-    x <- data.frame(x, check.names = FALSE)
+    x <- data.frame(x, check.names = FALSE, stringsAsFactors = FALSE)
   }
 
   # Subset to only the first and last 50 columns. There's a chance
@@ -123,7 +123,6 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   if (length(columns) >= ncol(x)) {
     out <- clipAndAddHorizontalDivider(x = x, dot = dot, n = n)
 
-    print(out)
     return(out)
   }
 
@@ -138,7 +137,8 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   for (i in columns[-1]) {
     const.out <- cbind(const.out, x[, i, drop = FALSE])
   }
-  x <- do.call(cbind, const.out)
+
+  x <- const.out
 
   x <- as.data.frame(x, stringsAsFactors = FALSE)
   rownames(x) <- save.rownames
@@ -150,7 +150,5 @@ peep <- function(x, n = 6, digits = 4, r2c = FALSE) {
   # Add horizontal divider.
   out <- clipAndAddHorizontalDivider(x = x, dot = dot, n = n)
 
-  print(out)
-
-  return(invisible(out))
+  return(out)
 }
